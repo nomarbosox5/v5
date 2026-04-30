@@ -1,267 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAP KING | LIVE COMMAND FL</title>
-    <style>
-        :root {
-            --bg: #050505;
-            --panel: #111;
-            --border: #222;
-            --text: #eee;
-            --text-dim: #666;
-            --accent: #22c55e; /* Live Green */
-            --warning: #fbbf24; /* Odds Gold */
-            --danger: #ef4444; /* High Gap Red */
-            --info: #3b82f6; /* Model Blue */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Gap King | Hard Rock FL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f0f2f7;--surface:#fff;--border:#dde1ec;--text:#0f1120;--sub:#5a6180;--muted:#9096b0;--dim:#e8eaf4;
+  --green:#00a85a;--gl:#e6f7ef;--gb:#7dd4aa;
+  --red:#e8203a;--rl:#fef0f2;--rb:#f5aab5;
+  --amber:#d97706;--al:#fef7e8;--ab:#f5d588;
+  --blue:#2563eb;--sans:'Inter',sans-serif;--mono:'JetBrains Mono',monospace
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text)}
+.screen{display:none;height:100vh;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            padding: 10px;
-            line-height: 1.2;
-        }
+/* HEADER */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px 12px;flex-shrink:0}
+.hdr-top{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.hdr-name{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.03em}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.legend{display:flex;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ld-live{background:var(--green)}.ld-pre{background:var(--amber)}.ld-off{background:var(--muted)}
 
-        /* Top Bar */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--panel);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            margin-bottom: 10px;
-        }
-        .brand { font-weight: 900; letter-spacing: 1px; color: var(--text); }
-        .brand span { color: var(--danger); }
-        
-        #refresh-btn {
-            background: #222;
-            color: #fff;
-            border: 1px solid #444;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        #refresh-btn:hover { background: #333; border-color: var(--accent); }
+/* CITY GRID */
+.city-scroll{flex:1;overflow-y:auto;padding:10px}
+.city-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.city-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;overflow:hidden}
+.city-card:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.1)}
+.city-card:active{transform:scale(.98)}
+.city-card.state-live{border-color:var(--gb);background:linear-gradient(135deg,var(--gl) 0%,#fff 60%)}
+.city-card.state-pre{border-color:var(--border);background:var(--surface)}
+.city-card.state-final{border-color:var(--border);background:var(--dim);opacity:.6;cursor:default}
+.city-card.state-noGame{border-color:var(--border);background:var(--dim);opacity:.4;cursor:default}
+.city-card.state-live::before{content:'';position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--green);animation:gpulse 1.4s infinite}
+@keyframes gpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,168,90,.5)}70%{box-shadow:0 0 0 6px rgba(0,168,90,0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.city-name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.city-card.state-live .city-name{color:var(--green)}
+.city-card.state-final .city-name,.city-card.state-noGame .city-name{color:var(--muted)}
+.city-vs{font-size:11px;font-weight:500;color:var(--sub)}
+.city-score{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text);margin-top:2px}
+.city-card.state-live .city-score{color:var(--green)}
+.city-status{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.s-live{color:var(--green)}.s-pre{color:var(--amber)}.s-final,.s-off{color:var(--muted)}
+.city-time{font-size:11px;color:var(--muted)}
 
-        /* Table Design */
-        .table-container {
-            background: var(--panel);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { 
-            background: #1a1a1a; 
-            color: var(--text-dim); 
-            text-align: left; 
-            padding: 12px 8px; 
-            text-transform: uppercase; 
-            font-size: 10px;
-            letter-spacing: 0.5px;
-        }
-        td { padding: 12px 8px; border-bottom: 1px solid var(--border); }
+/* SIGNAL */
+.sig-box{border-radius:14px;padding:16px;flex-shrink:0}
+.sig-box.idle{background:var(--surface);border:1.5px solid var(--border)}
+.sig-box.buy{background:var(--rl);border:2px solid var(--rb);animation:flash .5s}
+.sig-box.sell{background:var(--gl);border:2px solid var(--gb)}
+.sig-box.watch{background:var(--al);border:1.5px solid var(--ab)}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(232,32,58,.4)}100%{box-shadow:0 0 0 20px rgba(232,32,58,0)}}
+.sig-lbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.sig-lbl.idle{color:var(--muted)}.sig-lbl.buy{color:var(--red)}.sig-lbl.sell{color:var(--green)}.sig-lbl.watch{color:var(--amber)}
+.sig-action{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:6px}
+.sig-action.idle{color:var(--muted)}.sig-action.buy{color:var(--red)}.sig-action.sell{color:var(--green)}.sig-action.watch{color:var(--amber)}
+.sig-why{font-size:12px;color:var(--sub);line-height:1.65}
+.cdown-row{display:flex;align-items:baseline;gap:6px;margin-top:6px}
+.cdown-num{font-family:var(--mono);font-size:42px;font-weight:700;color:var(--red);line-height:1}
+.cdown-lbl{font-size:11px;color:var(--red);font-weight:600;opacity:.7}
 
-        /* Cell Styling */
-        .team-cell { font-weight: 800; font-size: 13px; }
-        .live-tag { color: var(--accent); font-size: 9px; margin-left: 4px; vertical-align: middle; }
-        .score { font-family: monospace; font-size: 14px; color: var(--text-dim); }
-        .prob { color: var(--info); font-weight: 600; }
-        .odds { color: var(--warning); font-weight: 600; }
-        
-        /* Gap Highlighting */
-        .gap-pill {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: 900;
-            background: #222;
-        }
-        .gap-alert { background: var(--danger); color: white; animation: pulse 1.5s infinite; }
+/* NUMS & BARS */
+.nums-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;flex-shrink:0}
+.num-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 11px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.nv{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--text);line-height:1}
+.nl{font-size:9px;font-weight:600;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.07em}
+.gap-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;flex-shrink:0}
+.gap-rows{display:flex;flex-direction:column;gap:7px}
+.gap-row{display:flex;align-items:center;gap:8px}
+.gap-lbl{font-size:11px;font-weight:500;color:var(--sub);width:84px;flex-shrink:0}
+.gap-track{flex:1;height:7px;background:var(--dim);border-radius:4px;overflow:hidden}
+.gap-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.gap-pct{font-family:var(--mono);font-size:12px;font-weight:700;width:38px;text-align:right}
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
-        .status-text { font-size: 10px; color: var(--text-dim); }
-    </style>
+/* INPUTS */
+.inputs-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;flex-shrink:0}
+.input-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 11px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.input-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.input-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.auto-badge{font-size:9px;font-weight:700;color:var(--green);background:var(--gl);border:1px solid var(--gb);padding:1px 5px;border-radius:3px;display:none}
+.field-input{background:var(--dim);border:1.5px solid var(--border);color:var(--text);font-family:var(--mono);font-size:16px;font-weight:700;padding:5px 8px;border-radius:6px;width:100%;text-align:center}
+</style>
 </head>
 <body>
 
-<header>
-    <div class="brand">GAP<span>KING</span> <small style="font-size: 9px; font-weight: normal; color: #444;">| HARD ROCK FL</small></div>
-    <div id="status-area">
-        <span id="api-status" class="status-text">SYSTEM IDLE</span>
-        <span id="last-update" class="status-text" style="margin: 0 15px;">--:--:--</span>
-        <button id="refresh-btn">MANUAL PULL</button>
+<div class="screen active" id="screen-pick">
+  <div class="hdr">
+    <div class="hdr-top"><span style="font-size:20px">👑</span><div class="hdr-name">Gap King</div></div>
+    <div class="hdr-sub">Select your team to start monitoring</div>
+    <div class="legend">
+      <div class="li"><div class="ld ld-live"></div><span style="color:var(--green)">Live</span></div>
+      <div class="li"><div class="ld ld-pre"></div><span style="color:var(--amber)">Upcoming</span></div>
+      <div class="li"><div class="ld ld-off"></div><span style="color:var(--muted)">Final</span></div>
     </div>
-</header>
-
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th width="20%">Matchup (Value Team)</th>
-                <th width="10%">Score</th>
-                <th width="12%">MLB Prob</th>
-                <th width="12%">HR Prob</th>
-                <th width="12%">Gap %</th>
-                <th width="12%">HR Odds</th>
-                <th width="12%">Model Line</th>
-            </tr>
-        </thead>
-        <tbody id="grid-body">
-            <tr><td colspan="7" style="text-align:center; padding:40px; color:#444;">INITIALIZING COMMAND CENTER...</td></tr>
-        </tbody>
-    </table>
+  </div>
+  <div class="city-scroll">
+    <div class="city-grid" id="city-grid">
+      <div style="grid-column:1/-1;padding:24px;text-align:center;font-size:13px;color:var(--muted)">Loading MLB schedule...</div>
+    </div>
+  </div>
 </div>
 
-<audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+<div class="screen" id="screen-watch">
+  <div class="hdr" style="padding:11px 16px; display:flex; justify-content:space-between; align-items:center">
+    <button onclick="goBack()" style="background:none; border:none; font-weight:700; color:var(--blue); cursor:pointer">‹ Back</button>
+    <div id="w-game" style="font-weight:700; font-size:13px">MATCHUP</div>
+    <div style="font-size:10px; font-weight:700; color:var(--green)">● LIVE</div>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; padding:10px; gap:9px; overflow-y:auto">
+    <div class="sig-box idle" id="sig-box">
+      <div class="sig-lbl idle" id="sig-lbl">MONITORING</div>
+      <div class="sig-action idle" id="sig-action">Searching for edge...</div>
+      <div class="sig-why" id="sig-why">Connecting to live feed...</div>
+      <div class="cdown-row" id="cdown-row" style="display:none">
+        <div class="cdown-num" id="cdown">15</div>
+        <div class="cdown-lbl">sec — lock it in</div>
+      </div>
+    </div>
+
+    <div class="nums-row">
+      <div class="num-card"><div class="nv" id="n-mlb">—</div><div class="nl">MLB %</div></div>
+      <div class="num-card"><div class="nv" id="n-book">—</div><div class="nl">Book %</div></div>
+      <div class="num-card"><div class="nv" id="n-gap">—</div><div class="nl">Gap</div></div>
+    </div>
+
+    <div class="gap-card">
+      <div class="gap-rows">
+        <div class="gap-row">
+          <div class="gap-lbl">MLB Prob</div>
+          <div class="gap-track"><div class="gap-fill" id="bar-mlb" style="width:0%;background:var(--blue)"></div></div>
+          <div class="gap-pct" id="bar-mlb-pct">—</div>
+        </div>
+        <div class="gap-row">
+          <div class="gap-lbl">Book Implied</div>
+          <div class="gap-track"><div class="gap-fill" id="bar-book" style="width:0%;background:var(--muted)"></div></div>
+          <div class="gap-pct" id="bar-book-pct">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inputs-row">
+      <div class="input-card">
+        <div class="input-top">
+          <div class="input-lbl">Hard Rock ML</div>
+          <div class="auto-badge" id="auto-badge">● AUTO</div>
+        </div>
+        <input class="field-input" id="i-odds" type="text" placeholder="-110" oninput="onOddsManual()">
+      </div>
+      <div class="input-card">
+        <div class="input-top"><div class="input-lbl">Stake ($)</div></div>
+        <input class="field-input" id="i-stake" type="text" value="10.00" oninput="updateDisplay()">
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-/** CONFIGURATION **/
-const API_KEY = "25bafa02832145bbfc9cce3e84332668";
-const PROXY = "https://green-hat-0844.nomarbosox5.workers.dev/?url=";
-const BOOKIE = "hardrockbet"; // The-Odds-API key for Hard Rock
-const MIN_GAP = 8.0; 
+const ODDS_KEY = '25bafa02832145bbfc9cce3e84332668';
+const THRESH = 8.0;
 
-/** UTILITIES **/
-const normalize = (n) => String(n).toLowerCase().replace(/[^a-z]/g, '');
-const amToProb = (odds) => {
-    const n = Number(odds);
-    return n < 0 ? (Math.abs(n)/(Math.abs(n)+100))*100 : (100/(n+100))*100;
-};
-const probToAm = (p) => {
-    if (p >= 99) return "-10000";
-    if (p <= 1) return "+10000";
-    return p >= 50 ? Math.round(-100*(p/(100-p))) : "+" + Math.round(100*((100-p)/p));
-};
-
-async function fetchData() {
-    const status = document.getElementById("api-status");
-    status.innerText = "API: FETCHING...";
-    
-    try {
-        const oddsUrl = `${PROXY}${encodeURIComponent(`https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?apiKey=${API_KEY}&bookmakers=${BOOKIE}&oddsFormat=american`)}`;
-        const schedUrl = `${PROXY}${encodeURIComponent(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore`)}`;
-
-        const [oRes, sRes] = await Promise.all([fetch(oddsUrl), fetch(schedUrl)]);
-        const oddsData = await oRes.json();
-        const schedData = await sRes.json();
-
-        const games = schedData.dates?.[0]?.games || [];
-        const livePromises = games.map(g => fetch(`${PROXY}${encodeURIComponent(`https://statsapi.mlb.com/api/v1.1/game/${g.gamePk}/feed/live`)}`).then(r => r.json()).catch(() => null));
-        const liveFeeds = await Promise.all(livePromises);
-
-        processGrid(games, liveFeeds, oddsData);
-        status.innerText = "API: LIVE";
-        document.getElementById("last-update").innerText = new Date().toLocaleTimeString();
-    } catch (e) {
-        console.error(e);
-        status.innerText = "API: ERROR";
-    }
+// Universal Proxy Replacement[cite: 1, 2]
+async function pfetch(url) {
+  const proxyUrl = 'https://corsproxy.io/?url=' + encodeURIComponent(url);
+  try {
+    const r = await fetch(proxyUrl);
+    if (r.ok) return r;
+  } catch(e) {}
+  return fetch(url);
 }
 
-function processGrid(games, feeds, odds) {
-    const body = document.getElementById("grid-body");
-    let rows = [];
-    let triggerAlarm = false;
+const TEAMS = [
+  {city:'Miami', team:'Miami Marlins'}, {city:'Tampa Bay', team:'Tampa Bay Rays'},
+  {city:'Atlanta', team:'Atlanta Braves'}, {city:'New York (Y)', team:'New York Yankees'},
+  {city:'Boston', team:'Boston Red Sox'}, {city:'Los Angeles', team:'Los Angeles Dodgers'}
+]; // Add more as needed[cite: 1]
 
-    games.forEach((g, idx) => {
-        const feed = feeds[idx];
-        const homeName = g.teams.home.team.name;
-        const awayName = g.teams.away.team.name;
-        
-        // 1. Get Model Probability
-        const homeWp = feed?.liveData?.plays?.currentPlay?.about?.homeWinProbability 
-                    ?? feed?.liveData?.linescore?.teams?.home?.winProbability 
-                    ?? null;
-        if (homeWp === null) return;
-        const awayWp = 100 - homeWp;
+let gameMap = {};
+let selectedTeam = null;
+let selectedGame = null;
+let mlbWP = null;
+let oddsAuto = false;
+let pollTimer = null;
 
-        // 2. Find Hard Rock Odds
-        const gameOdds = odds.find(o => normalize(o.home_team) === normalize(homeName));
-        const market = gameOdds?.bookmakers?.[0]?.markets?.[0];
-        if (!market) return;
-
-        const hOutcome = market.outcomes.find(o => normalize(o.name) === normalize(homeName));
-        const aOutcome = market.outcomes.find(o => normalize(o.name) === normalize(awayName));
-
-        if (!hOutcome || !aOutcome) return;
-
-        // 3. Calculate Gaps for both
-        const hGap = homeWp - amToProb(hOutcome.price);
-        const aGap = awayWp - amToProb(aOutcome.price);
-
-        // 4. Determine which side has more value
-        const bestSide = hGap >= aGap ? {
-            name: homeName.split(' ').pop(),
-            matchup: `${awayName.split(' ').pop()} @ ${homeName.split(' ').pop()}`,
-            model: homeWp,
-            book: amToProb(hOutcome.price),
-            gap: hGap,
-            odds: hOutcome.price
-        } : {
-            name: awayName.split(' ').pop(),
-            matchup: `${awayName.split(' ').pop()} @ ${homeName.split(' ').pop()}`,
-            model: awayWp,
-            book: amToProb(aOutcome.price),
-            gap: aGap,
-            odds: aOutcome.price
-        };
-
-        if (bestSide.gap >= MIN_GAP) triggerAlarm = true;
-
-        rows.push({
-            ...bestSide,
-            score: `${g.teams.away.score || 0}-${g.teams.home.score || 0}`,
-            isLive: g.status.abstractGameState === "Live"
-        });
+(async function boot() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const r = await pfetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
+    const d = await r.json();
+    (d.dates?.[0]?.games || []).forEach(g => {
+      const obj = {
+        pk: g.gamePk, homeTeam: g.teams.home.team.name, awayTeam: g.teams.away.team.name,
+        isLive: g.status.detailedState === 'In Progress',
+        isFinal: ['Final','Completed'].includes(g.status.detailedState)
+      };
+      gameMap[g.teams.home.team.name] = obj; gameMap[g.teams.away.team.name] = obj;
     });
+    renderGrid();
+  } catch(e) {}
+})();
 
-    rows.sort((a, b) => b.gap - a.gap);
-
-    body.innerHTML = rows.map(r => `
-        <tr>
-            <td>
-                <span class="team-cell">${r.name}</span><br>
-                <small style="color:#444">${r.matchup}</small>
-                ${r.isLive ? '<span class="live-tag">● LIVE</span>' : ''}
-            </td>
-            <td class="score">${r.score}</td>
-            <td class="prob">${r.model.toFixed(1)}%</td>
-            <td>${r.book.toFixed(1)}%</td>
-            <td>
-                <span class="gap-pill ${r.gap >= MIN_GAP ? 'gap-alert' : ''}">
-                    ${r.gap.toFixed(1)}%
-                </span>
-            </td>
-            <td class="odds">${r.odds > 0 ? '+' + r.odds : r.odds}</td>
-            <td style="color:var(--text-dim)">${probToAm(r.model)}</td>
-        </tr>
-    `).join('') || `<tr><td colspan="7" style="text-align:center; padding:20px; color:#444;">NO ACTIVE GAMES FOUND</td></tr>`;
-
-    if (triggerAlarm) document.getElementById("alarm").play().catch(() => {});
+function renderGrid() {
+  const grid = document.getElementById('city-grid');
+  grid.innerHTML = '';
+  TEAMS.forEach(t => {
+    const g = gameMap[t.team];
+    const card = document.createElement('div');
+    card.className = g?.isLive ? 'city-card state-live' : 'city-card state-pre';
+    card.innerHTML = `<div class="city-name">${t.city}</div><div class="city-vs">${g ? g.awayTeam+' @ '+g.homeTeam : 'No Game'}</div>`;
+    if (g && !g.isFinal) card.onclick = () => selectTeam(t.team, g);
+    grid.appendChild(card);
+  });
 }
 
-// Initialization
-document.getElementById("refresh-btn").onclick = fetchData;
-document.body.addEventListener('click', () => { console.log("Audio Unlocked"); }, {once: true});
-setInterval(fetchData, 60000);
-fetchData();
+function selectTeam(team, game) {
+  selectedTeam = team; selectedGame = game;
+  document.getElementById('screen-pick').classList.remove('active');
+  document.getElementById('screen-watch').classList.add('active');
+  document.getElementById('w-game').textContent = `${game.awayTeam} @ ${game.homeTeam}`;
+  doPoll();
+  pollTimer = setInterval(doPoll, 30000);
+}
 
+function goBack() {
+  clearInterval(pollTimer);
+  document.getElementById('screen-watch').classList.remove('active');
+  document.getElementById('screen-pick').classList.add('active');
+}
+
+async function doPoll() {
+  if (!selectedGame) return;
+  try {
+    const r = await pfetch(`https://statsapi.mlb.com/api/v1.1/game/${selectedGame.pk}/feed/live`);
+    const d = await r.json();
+    let wp = d?.liveData?.plays?.currentPlay?.about?.homeWinProbability ?? 50;
+    mlbWP = (selectedTeam === selectedGame.homeTeam) ? wp : (100 - wp);
+    
+    // Fetch Hard Rock specific odds[cite: 1]
+    const or = await pfetch(`https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?apiKey=${ODDS_KEY}&regions=us&bookmakers=hardrockbet`);
+    const od = await or.json();
+    const match = od.find(m => m.home_team === selectedGame.homeTeam);
+    const price = match?.bookmakers?.[0]?.markets?.[0]?.outcomes?.find(o => o.name === selectedTeam)?.price;
+    
+    if (price && !oddsAuto) {
+      document.getElementById('i-odds').value = price;
+      document.getElementById('auto-badge').style.display = 'block';
+    }
+    updateDisplay();
+  } catch(e) {}
+}
+
+function updateDisplay() {
+  const odds = parseFloat(document.getElementById('i-odds').value);
+  const prob = odds < 0 ? (Math.abs(odds)/(Math.abs(odds)+100))*100 : (100/(odds+100))*100;
+  const gap = mlbWP - prob;
+
+  document.getElementById('n-mlb').textContent = mlbWP.toFixed(1) + '%';
+  document.getElementById('n-book').textContent = prob.toFixed(1) + '%';
+  document.getElementById('n-gap').textContent = gap.toFixed(1) + '%';
+  document.getElementById('bar-mlb').style.width = mlbWP + '%';
+  document.getElementById('bar-book').style.width = prob + '%';
+
+  const sigBox = document.getElementById('sig-box');
+  if (gap >= THRESH) {
+    sigBox.className = 'sig-box buy';
+    document.getElementById('sig-action').textContent = '🚨 BUY SIGNAL';
+    document.getElementById('sig-why').textContent = `Gap is ${gap.toFixed(1)}%. Bet ${selectedTeam} now.`;
+  } else {
+    sigBox.className = 'sig-box idle';
+    document.getElementById('sig-action').textContent = 'Monitoring...';
+    document.getElementById('sig-why').textContent = `Gap: ${gap.toFixed(1)}% (Target: 8%)`;
+  }
+}
+
+function onOddsManual() { oddsAuto = true; updateDisplay(); }
 </script>
 </body>
 </html>
