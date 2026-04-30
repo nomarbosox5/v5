@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAP KING | LIVE COMMAND</title>
+
+<style>
+:root {
+    --bg: #000;
+    --bg-alt: #111;
+    --row-border: #222;
+    --text-main: #fff;
+    --text-muted: #777;
+    --accent-live: #22c55e;
+    --accent-gap-high: #ef4444;
+    --accent-win: #3b82f6;
+    --accent-odds: #fbbf24;
+}
+* { box-sizing: border-box; }
+
+body {
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    padding: 5px;
+    overflow: auto;
+}
+
+#status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 4px 6px;
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--row-border);
+}
+
+#refresh-btn {
+    background:#333;
+    color:#fff;
+    border:1px solid #444;
+    padding:4px 8px;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:10px;
+}
+
+#refresh-btn:hover {
+    background:#444;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    table-layout: fixed;
+}
+
+th {
+    background: #181818;
+    color: #888;
+    text-align: left;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--row-border);
+}
+
+td {
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--row-border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.live { color: var(--accent-live); font-weight: 700; }
+.gap-high { background: rgba(239,68,68,0.2); color: var(--accent-gap-high); font-weight: bold; }
+.win-pct { color: var(--accent-win); font-weight: 600; }
+.odd-val { color: var(--accent-odds); }
+</style>
+</head>
+<body>
+
+<div id="status-bar">
+    <div id="clock">SYSTEM READY</div>
+    <button id="refresh-btn">PULL NOW</button>
+    <div id="api-status">API: IDLE</div>
+</div>
+
+<table>
+<thead>
+<tr>
+    <th width="20%">TEAM</th>
+    <th width="10%">SCORE</th>
+    <th width="12%">BOOK %</th>
+    <th width="12%">MLB %</th>
+    <th width="12%">GAP</th>
+    <th width="12%">ODDS</th>
+    <th width="12%">MODEL</th>
+</tr>
+</thead>
+<tbody id="grid-body"></tbody>
+</table>
+
+<audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+<script>
+const ODDS_KEY = "25bafa02832145bbfc9cce3e84332668";
+const PROXY_BASE = "https://green-hat-0844.nomarbosox5.workers.dev/?url=";
+const GAP_THRESHOLD = 8;
+const BOOKMAKER_PREFERENCE = ["hardrock", "fanduel", "draftkings", "betmgm", "caesars"];
+
+let audioUnlocked = false;
+
+// unlock audio on first interaction
+document.body.addEventListener("click", () => {
+    if (audioUnlocked) return;
+    const a = document.getElementById("alarm");
+    a.play().catch(()=>{});
+    audioUnlocked = true;
+}, { once: true });
+
+function proxied(url) {
+    return PROXY_BASE + encodeURIComponent(url);
+}
+
+function normalize(name = "") {
+    return String(name).toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function amToProb(odds) {
+    const n = Number(odds);
+    if (!Number.isFinite(n) || n === 0) return 0;
+    if (n < 0) return (Math.abs(n) / (Math.abs(n) + 100)) * 100;
+    return (100 / (n + 100)) * 100;
+}
+
+function probToAm(p) {
+    const n = Number(p);
+    if (!Number.isFinite(n) || n <= 0) return "+9999";
+    if (n >= 100) return "-9999";
+    if (n >= 50) return Math.round(-100 * (n / (100 - n)));
+    return "+" + Math.round(100 * ((100 - n) / n));
+}
+
+async function safeJson(res) {
+    if (!res || !res.ok) return null;
+    try { return await res.json(); }
+    catch { return null; }
+}
+
+function pickBookmaker(oddsGame) {
+    const books = oddsGame?.bookmakers;
+    if (!Array.isArray(books) || books.length === 0) return null;
+
+    // try preferred list first
+    for (const key of BOOKMAKER_PREFERENCE) {
+        const found = books.find(b => b.key === key);
+        if (found) return found;
+    }
+    // fallback: first available
+    return books[0];
+}
+
+function pickMarket(bookmaker) {
+    const markets = bookmaker?.markets;
+    if (!Array.isArray(markets) || markets.length === 0) return null;
+
+    // prefer player props / HR-like markets later if you want;
+    // for now, just take first non-empty market
+    return markets.find(m => Array.isArray(m.outcomes) && m.outcomes.length > 0) || null;
+}
+
+function pickHomeOutcome(market, homeName) {
+    if (!market || !Array.isArray(market.outcomes)) return null;
+    const homeNorm = normalize(homeName);
+    // try exact name match first
+    let out = market.outcomes.find(o => normalize(o.name) === homeNorm);
+    if (out) return out;
+    // fallback: first outcome
+    return market.outcomes[0] || null;
+}
+
+async function update() {
+    const statusEl = document.getElementById("api-status");
+    const clockEl = document.getElementById("clock");
+    const bodyEl = document.getElementById("grid-body");
+
+    statusEl.innerText = "API: LOADING";
+
+    try {
+        const oddsUrl = proxied(
+            `https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?regions=us&apiKey=${ODDS_KEY}&oddsFormat=american`
+        );
+        const schedUrl = proxied(
+            "https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore"
+        );
+
+        const [oddsRes, schedRes] = await Promise.all([
+            fetch(oddsUrl),
+            fetch(schedUrl)
+        ]);
+
+        const [oddsData, schedData] = await Promise.all([
+            safeJson(oddsRes),
+            safeJson(schedRes)
+        ]);
+
+        if (!Array.isArray(oddsData) || !schedData?.dates?.[0]?.games) {
+            statusEl.innerText = "API: BAD PAYLOAD";
+            bodyEl.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#555;padding:20px">NO DATA</td></tr>`;
+            return;
+        }
+
+        const games = schedData.dates[0].games || [];
+
+        // map odds by normalized home team
+        const oddsMap = {};
+        for (const o of oddsData) {
+            if (!o?.home_team) continue;
+            oddsMap[normalize(o.home_team)] = o;
+        }
+
+        // fetch all live feeds in parallel
+        const livePromises = games.map(g =>
+            fetch(proxied(`https://statsapi.mlb.com/api/v1.1/game/${g.gamePk}/feed/live`))
+                .then(safeJson)
+                .catch(() => null)
+        );
+        const liveDataArr = await Promise.all(livePromises);
+
+        const rows = [];
+        let alarm = false;
+
+        for (let i = 0; i < games.length; i++) {
+            const g = games[i];
+            const live = liveDataArr[i];
+
+            const homeName = g?.teams?.home?.team?.name;
+            const awayName = g?.teams?.away?.team?.name;
+            if (!homeName || !awayName) continue;
+
+            // win probability fallback chain
+            const wp =
+                live?.liveData?.plays?.currentPlay?.about?.homeWinProbability ??
+                live?.liveData?.linescore?.teams?.home?.winProbability ??
+                null;
+
+            if (typeof wp !== "number" || !Number.isFinite(wp)) continue;
+
+            const oddsGame = oddsMap[normalize(homeName)];
+            if (!oddsGame) continue;
+
+            const bookmaker = pickBookmaker(oddsGame);
+            if (!bookmaker) continue;
+
+            const market = pickMarket(bookmaker);
+            if (!market) continue;
+
+            const outcome = pickHomeOutcome(market, homeName);
+            if (!outcome) continue;
+
+            const rawPrice = outcome.price_american ?? outcome.price;
+            const am = Number(rawPrice);
+            if (!Number.isFinite(am) || am === 0) continue;
+
+            const bookProb = amToProb(am);
+            const gap = wp - bookProb;
+
+            if (gap >= GAP_THRESHOLD) alarm = true;
+
+            const score = `${g.teams.away.score ?? 0}-${g.teams.home.score ?? 0}`;
+            const isLive = g.status?.abstractGameState === "Live";
+
+            rows.push({
+                team: homeName.split(" ").pop(),
+                score,
+                book: bookProb.toFixed(1),
+                wp: wp.toFixed(1),
+                gap: gap.toFixed(1),
+                gapVal: gap,
+                odds: am > 0 ? `+${am}` : String(am),
+                model: probToAm(wp),
+                live: isLive
+            });
+        }
+
+        rows.sort((a, b) => b.gapVal - a.gapVal);
+
+        if (!rows.length) {
+            bodyEl.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#555;padding:20px">NO DATA</td></tr>`;
+        } else {
+            bodyEl.innerHTML = rows.map(r => `
+                <tr>
+                    <td class="${r.live ? "live" : ""}">${r.team}</td>
+                    <td>${r.score}</td>
+                    <td>${r.book}%</td>
+                    <td class="win-pct">${r.wp}%</td>
+                    <td class="${r.gapVal >= GAP_THRESHOLD ? "gap-high" : ""}">${r.gap}%</td>
+                    <td class="odd-val">${r.odds}</td>
+                    <td>${r.model}</td>
+                </tr>
+            `).join("");
+        }
+
+        if (alarm && audioUnlocked) {
+            document.getElementById("alarm").play().catch(()=>{});
+        }
+
+        statusEl.innerText = "API: LIVE";
+        clockEl.innerText = new Date().toLocaleTimeString();
+
+    } catch (err) {
+        console.error(err);
+        statusEl.innerText = "API: ERROR";
+        bodyEl.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#555;padding:20px">ERROR</td></tr>`;
+    }
+}
+
+document.getElementById("refresh-btn").onclick = update;
+setInterval(update, 60000);
+update();
+</script>
+
+</body>
+</html>
