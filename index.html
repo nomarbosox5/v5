@@ -1,329 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GAP KING | LIVE COMMAND</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAP KING | LIVE COMMAND FL</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #111;
+            --border: #222;
+            --text: #eee;
+            --text-dim: #666;
+            --accent: #22c55e; /* Live Green */
+            --warning: #fbbf24; /* Odds Gold */
+            --danger: #ef4444; /* High Gap Red */
+            --info: #3b82f6; /* Model Blue */
+        }
 
-<style>
-:root {
-    --bg: #000;
-    --bg-alt: #111;
-    --row-border: #222;
-    --text-main: #fff;
-    --text-muted: #777;
-    --accent-live: #22c55e;
-    --accent-gap-high: #ef4444;
-    --accent-win: #3b82f6;
-    --accent-odds: #fbbf24;
-}
-* { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            padding: 10px;
+            line-height: 1.2;
+        }
 
-body {
-    background: var(--bg);
-    color: var(--text-main);
-    font-family: system-ui, sans-serif;
-    margin: 0;
-    padding: 5px;
-    overflow: auto;
-}
+        /* Top Bar */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+        }
+        .brand { font-weight: 900; letter-spacing: 1px; color: var(--text); }
+        .brand span { color: var(--danger); }
+        
+        #refresh-btn {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        #refresh-btn:hover { background: #333; border-color: var(--accent); }
 
-#status-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 10px;
-    color: var(--text-muted);
-    padding: 4px 6px;
-    background: var(--bg-alt);
-    border-bottom: 1px solid var(--row-border);
-}
+        /* Table Design */
+        .table-container {
+            background: var(--panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { 
+            background: #1a1a1a; 
+            color: var(--text-dim); 
+            text-align: left; 
+            padding: 12px 8px; 
+            text-transform: uppercase; 
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+        td { padding: 12px 8px; border-bottom: 1px solid var(--border); }
 
-#refresh-btn {
-    background:#333;
-    color:#fff;
-    border:1px solid #444;
-    padding:4px 8px;
-    border-radius:4px;
-    cursor:pointer;
-    font-size:10px;
-}
+        /* Cell Styling */
+        .team-cell { font-weight: 800; font-size: 13px; }
+        .live-tag { color: var(--accent); font-size: 9px; margin-left: 4px; vertical-align: middle; }
+        .score { font-family: monospace; font-size: 14px; color: var(--text-dim); }
+        .prob { color: var(--info); font-weight: 600; }
+        .odds { color: var(--warning); font-weight: 600; }
+        
+        /* Gap Highlighting */
+        .gap-pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            background: #222;
+        }
+        .gap-alert { background: var(--danger); color: white; animation: pulse 1.5s infinite; }
 
-#refresh-btn:hover {
-    background:#444;
-}
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-    table-layout: fixed;
-}
-
-th {
-    background: #181818;
-    color: #888;
-    text-align: left;
-    padding: 6px 4px;
-    border-bottom: 1px solid var(--row-border);
-}
-
-td {
-    padding: 8px 4px;
-    border-bottom: 1px solid var(--row-border);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.live { color: var(--accent-live); font-weight: 700; }
-.gap-high { background: rgba(239,68,68,0.2); color: var(--accent-gap-high); font-weight: bold; }
-.win-pct { color: var(--accent-win); font-weight: 600; }
-.odd-val { color: var(--accent-odds); }
-</style>
+        .status-text { font-size: 10px; color: var(--text-dim); }
+    </style>
 </head>
 <body>
 
-<div id="status-bar">
-    <div id="clock">SYSTEM READY</div>
-    <button id="refresh-btn">PULL NOW</button>
-    <div id="api-status">API: IDLE</div>
-</div>
+<header>
+    <div class="brand">GAP<span>KING</span> <small style="font-size: 9px; font-weight: normal; color: #444;">| HARD ROCK FL</small></div>
+    <div id="status-area">
+        <span id="api-status" class="status-text">SYSTEM IDLE</span>
+        <span id="last-update" class="status-text" style="margin: 0 15px;">--:--:--</span>
+        <button id="refresh-btn">MANUAL PULL</button>
+    </div>
+</header>
 
-<table>
-<thead>
-<tr>
-    <th width="20%">TEAM</th>
-    <th width="10%">SCORE</th>
-    <th width="12%">BOOK %</th>
-    <th width="12%">MLB %</th>
-    <th width="12%">GAP</th>
-    <th width="12%">ODDS</th>
-    <th width="12%">MODEL</th>
-</tr>
-</thead>
-<tbody id="grid-body"></tbody>
-</table>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th width="20%">Matchup (Value Team)</th>
+                <th width="10%">Score</th>
+                <th width="12%">MLB Prob</th>
+                <th width="12%">HR Prob</th>
+                <th width="12%">Gap %</th>
+                <th width="12%">HR Odds</th>
+                <th width="12%">Model Line</th>
+            </tr>
+        </thead>
+        <tbody id="grid-body">
+            <tr><td colspan="7" style="text-align:center; padding:40px; color:#444;">INITIALIZING COMMAND CENTER...</td></tr>
+        </tbody>
+    </table>
+</div>
 
 <audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
-const ODDS_KEY = "25bafa02832145bbfc9cce3e84332668";
-const PROXY_BASE = "https://green-hat-0844.nomarbosox5.workers.dev/?url=";
-const GAP_THRESHOLD = 8;
-const BOOKMAKER_PREFERENCE = ["hardrock", "fanduel", "draftkings", "betmgm", "caesars"];
+/** CONFIGURATION **/
+const API_KEY = "25bafa02832145bbfc9cce3e84332668";
+const PROXY = "https://green-hat-0844.nomarbosox5.workers.dev/?url=";
+const BOOKIE = "hardrockbet"; // The-Odds-API key for Hard Rock
+const MIN_GAP = 8.0; 
 
-let audioUnlocked = false;
-
-// unlock audio on first interaction
-document.body.addEventListener("click", () => {
-    if (audioUnlocked) return;
-    const a = document.getElementById("alarm");
-    a.play().catch(()=>{});
-    audioUnlocked = true;
-}, { once: true });
-
-function proxied(url) {
-    return PROXY_BASE + encodeURIComponent(url);
-}
-
-function normalize(name = "") {
-    return String(name).toLowerCase().replace(/[^a-z]/g, "");
-}
-
-function amToProb(odds) {
+/** UTILITIES **/
+const normalize = (n) => String(n).toLowerCase().replace(/[^a-z]/g, '');
+const amToProb = (odds) => {
     const n = Number(odds);
-    if (!Number.isFinite(n) || n === 0) return 0;
-    if (n < 0) return (Math.abs(n) / (Math.abs(n) + 100)) * 100;
-    return (100 / (n + 100)) * 100;
-}
+    return n < 0 ? (Math.abs(n)/(Math.abs(n)+100))*100 : (100/(n+100))*100;
+};
+const probToAm = (p) => {
+    if (p >= 99) return "-10000";
+    if (p <= 1) return "+10000";
+    return p >= 50 ? Math.round(-100*(p/(100-p))) : "+" + Math.round(100*((100-p)/p));
+};
 
-function probToAm(p) {
-    const n = Number(p);
-    if (!Number.isFinite(n) || n <= 0) return "+9999";
-    if (n >= 100) return "-9999";
-    if (n >= 50) return Math.round(-100 * (n / (100 - n)));
-    return "+" + Math.round(100 * ((100 - n) / n));
-}
-
-async function safeJson(res) {
-    if (!res || !res.ok) return null;
-    try { return await res.json(); }
-    catch { return null; }
-}
-
-function pickBookmaker(oddsGame) {
-    const books = oddsGame?.bookmakers;
-    if (!Array.isArray(books) || books.length === 0) return null;
-
-    // try preferred list first
-    for (const key of BOOKMAKER_PREFERENCE) {
-        const found = books.find(b => b.key === key);
-        if (found) return found;
-    }
-    // fallback: first available
-    return books[0];
-}
-
-function pickMarket(bookmaker) {
-    const markets = bookmaker?.markets;
-    if (!Array.isArray(markets) || markets.length === 0) return null;
-
-    // prefer player props / HR-like markets later if you want;
-    // for now, just take first non-empty market
-    return markets.find(m => Array.isArray(m.outcomes) && m.outcomes.length > 0) || null;
-}
-
-function pickHomeOutcome(market, homeName) {
-    if (!market || !Array.isArray(market.outcomes)) return null;
-    const homeNorm = normalize(homeName);
-    // try exact name match first
-    let out = market.outcomes.find(o => normalize(o.name) === homeNorm);
-    if (out) return out;
-    // fallback: first outcome
-    return market.outcomes[0] || null;
-}
-
-async function update() {
-    const statusEl = document.getElementById("api-status");
-    const clockEl = document.getElementById("clock");
-    const bodyEl = document.getElementById("grid-body");
-
-    statusEl.innerText = "API: LOADING";
-
+async function fetchData() {
+    const status = document.getElementById("api-status");
+    status.innerText = "API: FETCHING...";
+    
     try {
-        const oddsUrl = proxied(
-            `https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?regions=us&apiKey=${ODDS_KEY}&oddsFormat=american`
-        );
-        const schedUrl = proxied(
-            "https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore"
-        );
+        const oddsUrl = `${PROXY}${encodeURIComponent(`https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?apiKey=${API_KEY}&bookmakers=${BOOKIE}&oddsFormat=american`)}`;
+        const schedUrl = `${PROXY}${encodeURIComponent(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore`)}`;
 
-        const [oddsRes, schedRes] = await Promise.all([
-            fetch(oddsUrl),
-            fetch(schedUrl)
-        ]);
+        const [oRes, sRes] = await Promise.all([fetch(oddsUrl), fetch(schedUrl)]);
+        const oddsData = await oRes.json();
+        const schedData = await sRes.json();
 
-        const [oddsData, schedData] = await Promise.all([
-            safeJson(oddsRes),
-            safeJson(schedRes)
-        ]);
+        const games = schedData.dates?.[0]?.games || [];
+        const livePromises = games.map(g => fetch(`${PROXY}${encodeURIComponent(`https://statsapi.mlb.com/api/v1.1/game/${g.gamePk}/feed/live`)}`).then(r => r.json()).catch(() => null));
+        const liveFeeds = await Promise.all(livePromises);
 
-        if (!Array.isArray(oddsData) || !schedData?.dates?.[0]?.games) {
-            statusEl.innerText = "API: BAD PAYLOAD";
-            bodyEl.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#555;padding:20px">NO DATA</td></tr>`;
-            return;
-        }
-
-        const games = schedData.dates[0].games || [];
-
-        // map odds by normalized home team
-        const oddsMap = {};
-        for (const o of oddsData) {
-            if (!o?.home_team) continue;
-            oddsMap[normalize(o.home_team)] = o;
-        }
-
-        // fetch all live feeds in parallel
-        const livePromises = games.map(g =>
-            fetch(proxied(`https://statsapi.mlb.com/api/v1.1/game/${g.gamePk}/feed/live`))
-                .then(safeJson)
-                .catch(() => null)
-        );
-        const liveDataArr = await Promise.all(livePromises);
-
-        const rows = [];
-        let alarm = false;
-
-        for (let i = 0; i < games.length; i++) {
-            const g = games[i];
-            const live = liveDataArr[i];
-
-            const homeName = g?.teams?.home?.team?.name;
-            const awayName = g?.teams?.away?.team?.name;
-            if (!homeName || !awayName) continue;
-
-            // win probability fallback chain
-            const wp =
-                live?.liveData?.plays?.currentPlay?.about?.homeWinProbability ??
-                live?.liveData?.linescore?.teams?.home?.winProbability ??
-                null;
-
-            if (typeof wp !== "number" || !Number.isFinite(wp)) continue;
-
-            const oddsGame = oddsMap[normalize(homeName)];
-            if (!oddsGame) continue;
-
-            const bookmaker = pickBookmaker(oddsGame);
-            if (!bookmaker) continue;
-
-            const market = pickMarket(bookmaker);
-            if (!market) continue;
-
-            const outcome = pickHomeOutcome(market, homeName);
-            if (!outcome) continue;
-
-            const rawPrice = outcome.price_american ?? outcome.price;
-            const am = Number(rawPrice);
-            if (!Number.isFinite(am) || am === 0) continue;
-
-            const bookProb = amToProb(am);
-            const gap = wp - bookProb;
-
-            if (gap >= GAP_THRESHOLD) alarm = true;
-
-            const score = `${g.teams.away.score ?? 0}-${g.teams.home.score ?? 0}`;
-            const isLive = g.status?.abstractGameState === "Live";
-
-            rows.push({
-                team: homeName.split(" ").pop(),
-                score,
-                book: bookProb.toFixed(1),
-                wp: wp.toFixed(1),
-                gap: gap.toFixed(1),
-                gapVal: gap,
-                odds: am > 0 ? `+${am}` : String(am),
-                model: probToAm(wp),
-                live: isLive
-            });
-        }
-
-        rows.sort((a, b) => b.gapVal - a.gapVal);
-
-        if (!rows.length) {
-            bodyEl.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#555;padding:20px">NO DATA</td></tr>`;
-        } else {
-            bodyEl.innerHTML = rows.map(r => `
-                <tr>
-                    <td class="${r.live ? "live" : ""}">${r.team}</td>
-                    <td>${r.score}</td>
-                    <td>${r.book}%</td>
-                    <td class="win-pct">${r.wp}%</td>
-                    <td class="${r.gapVal >= GAP_THRESHOLD ? "gap-high" : ""}">${r.gap}%</td>
-                    <td class="odd-val">${r.odds}</td>
-                    <td>${r.model}</td>
-                </tr>
-            `).join("");
-        }
-
-        if (alarm && audioUnlocked) {
-            document.getElementById("alarm").play().catch(()=>{});
-        }
-
-        statusEl.innerText = "API: LIVE";
-        clockEl.innerText = new Date().toLocaleTimeString();
-
-    } catch (err) {
-        console.error(err);
-        statusEl.innerText = "API: ERROR";
-        bodyEl.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#555;padding:20px">ERROR</td></tr>`;
+        processGrid(games, liveFeeds, oddsData);
+        status.innerText = "API: LIVE";
+        document.getElementById("last-update").innerText = new Date().toLocaleTimeString();
+    } catch (e) {
+        console.error(e);
+        status.innerText = "API: ERROR";
     }
 }
 
-document.getElementById("refresh-btn").onclick = update;
-setInterval(update, 60000);
-update();
-</script>
+function processGrid(games, feeds, odds) {
+    const body = document.getElementById("grid-body");
+    let rows = [];
+    let triggerAlarm = false;
 
+    games.forEach((g, idx) => {
+        const feed = feeds[idx];
+        const homeName = g.teams.home.team.name;
+        const awayName = g.teams.away.team.name;
+        
+        // 1. Get Model Probability
+        const homeWp = feed?.liveData?.plays?.currentPlay?.about?.homeWinProbability 
+                    ?? feed?.liveData?.linescore?.teams?.home?.winProbability 
+                    ?? null;
+        if (homeWp === null) return;
+        const awayWp = 100 - homeWp;
+
+        // 2. Find Hard Rock Odds
+        const gameOdds = odds.find(o => normalize(o.home_team) === normalize(homeName));
+        const market = gameOdds?.bookmakers?.[0]?.markets?.[0];
+        if (!market) return;
+
+        const hOutcome = market.outcomes.find(o => normalize(o.name) === normalize(homeName));
+        const aOutcome = market.outcomes.find(o => normalize(o.name) === normalize(awayName));
+
+        if (!hOutcome || !aOutcome) return;
+
+        // 3. Calculate Gaps for both
+        const hGap = homeWp - amToProb(hOutcome.price);
+        const aGap = awayWp - amToProb(aOutcome.price);
+
+        // 4. Determine which side has more value
+        const bestSide = hGap >= aGap ? {
+            name: homeName.split(' ').pop(),
+            matchup: `${awayName.split(' ').pop()} @ ${homeName.split(' ').pop()}`,
+            model: homeWp,
+            book: amToProb(hOutcome.price),
+            gap: hGap,
+            odds: hOutcome.price
+        } : {
+            name: awayName.split(' ').pop(),
+            matchup: `${awayName.split(' ').pop()} @ ${homeName.split(' ').pop()}`,
+            model: awayWp,
+            book: amToProb(aOutcome.price),
+            gap: aGap,
+            odds: aOutcome.price
+        };
+
+        if (bestSide.gap >= MIN_GAP) triggerAlarm = true;
+
+        rows.push({
+            ...bestSide,
+            score: `${g.teams.away.score || 0}-${g.teams.home.score || 0}`,
+            isLive: g.status.abstractGameState === "Live"
+        });
+    });
+
+    rows.sort((a, b) => b.gap - a.gap);
+
+    body.innerHTML = rows.map(r => `
+        <tr>
+            <td>
+                <span class="team-cell">${r.name}</span><br>
+                <small style="color:#444">${r.matchup}</small>
+                ${r.isLive ? '<span class="live-tag">● LIVE</span>' : ''}
+            </td>
+            <td class="score">${r.score}</td>
+            <td class="prob">${r.model.toFixed(1)}%</td>
+            <td>${r.book.toFixed(1)}%</td>
+            <td>
+                <span class="gap-pill ${r.gap >= MIN_GAP ? 'gap-alert' : ''}">
+                    ${r.gap.toFixed(1)}%
+                </span>
+            </td>
+            <td class="odds">${r.odds > 0 ? '+' + r.odds : r.odds}</td>
+            <td style="color:var(--text-dim)">${probToAm(r.model)}</td>
+        </tr>
+    `).join('') || `<tr><td colspan="7" style="text-align:center; padding:20px; color:#444;">NO ACTIVE GAMES FOUND</td></tr>`;
+
+    if (triggerAlarm) document.getElementById("alarm").play().catch(() => {});
+}
+
+// Initialization
+document.getElementById("refresh-btn").onclick = fetchData;
+document.body.addEventListener('click', () => { console.log("Audio Unlocked"); }, {once: true});
+setInterval(fetchData, 60000);
+fetchData();
+
+</script>
 </body>
 </html>
