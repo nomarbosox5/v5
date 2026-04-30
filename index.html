@@ -1,202 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL | Focus Mode</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .glow-green { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
-        .glow-red { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.4); }
-        tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; }
-        .text-header { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748b; font-weight: 800; }
-        .btn-action { transition: all 0.2s; text-transform: uppercase; font-weight: 900; letter-spacing: 0.05em; }
-        .btn-action:active { transform: scale(0.95); }
-        .team-select { cursor: pointer; }
-        .team-select:hover { color: #3b82f6 ! territory; }
-        .focus-banner { background: linear-gradient(90deg, #1e3a8a 0%, #020617 100%); }
-    </style>
-</head>
-<body class="p-4 md:p-8">
+// ... existing styles and setup ...
 
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h1 class="text-3xl font-black tracking-tighter text-white">MLB <span class="text-blue-500">TERMINAL</span></h1>
-                <p id="subHeader" class="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">Florida Node | Real-Time Arbitrage</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button id="clearFocus" onclick="setFocus(null)" class="hidden btn-action px-3 py-2 rounded-lg bg-red-900/40 text-red-400 text-[10px] border border-red-800/50">
-                    ✕ Show All
-                </button>
-                <button id="muteBtn" onclick="toggleMute()" class="btn-action px-3 py-2 rounded-lg bg-slate-800 text-[10px] border border-slate-700">
-                    🔊 Sound On
-                </button>
-                <button onclick="fetchMarketData()" class="btn-action px-4 py-2 rounded-lg bg-blue-600 text-[10px] shadow-lg shadow-blue-500/20">
-                    Force Pull
-                </button>
-                <div class="text-right ml-2">
-                    <span id="countdown" class="font-mono text-xl text-blue-500/80">60s</span>
-                </div>
-            </div>
-        </div>
+async function fetchMarketData() {
+    if (isFetching) return;
+    isFetching = true;
+    
+    // ADDED: includeLinks=true to the URL
+    const url = `https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?apiKey=${API_KEY}&regions=us,us2&markets=h2h&oddsFormat=american&include_scores=true&includeLinks=true`;
+    
+    // ... inside the masterList.push logic ...
+    
+    // FIND THE LINK: The API now provides a direct link to the outcome
+    const deepLink = hr.markets[0].outcomes.find(o => o.name === team)?.link || "https://www.hardrock.bet/sportsbook/baseball/mlb/";
 
-        <!-- Terminal Table -->
-        <div class="glass rounded-xl overflow-hidden shadow-2xl">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-white/5">
-                        <th class="p-4 text-header">City For</th>
-                        <th class="p-4 text-header text-center">HR Win %</th>
-                        <th class="p-4 text-header text-center">API Win %</th>
-                        <th class="p-4 text-header text-center">Diff</th>
-                        <th class="p-4 text-header text-center">HR Proposed Open</th>
-                        <th class="p-4 text-header text-center">Est. Close Bet</th>
-                        <th class="p-4 text-header">Against</th>
-                        <th class="p-4 text-header">Score</th>
-                    </tr>
-                </thead>
-                <tbody id="oddsBody" class="font-medium text-[13px]">
-                    <tr><td colspan="8" class="p-10 text-center text-slate-600 animate-pulse">Initializing Single Call Fetch...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <p class="text-[10px] text-slate-600 mt-4 italic text-center">Tip: Click any team name to lock focus on that specific game.</p>
-    </div>
+    masterList.push({
+        team,
+        hrPct: (hrProb * 100).toFixed(1),
+        apiPct: (apiProb * 100).toFixed(1),
+        diff: diff.toFixed(2),
+        hrProposed: hrLine > 0 ? "+" + hrLine : hrLine,
+        estClose: toMoneyline(apiProb),
+        against: isHome ? game.away_team : game.home_team,
+        score: scoreDisplay,
+        link: deepLink // Store the deep link here
+    });
 
-    <script>
-        const API_KEY = '25bafa02832145bbfc9cce3e84332668';
-        const alertSound = new Audio('https://actions.google.com/sounds/v1/foley/notification_high_intensity.ogg');
-        let timeLeft = 60;
-        let isFetching = false;
-        let isMuted = false;
-        let focusedTeam = null;
-
-        function toggleMute() {
-            isMuted = !isMuted;
-            document.getElementById('muteBtn').innerText = isMuted ? '🔇 Muted' : '🔊 Sound On';
-            alertSound.play().then(() => alertSound.pause());
-        }
-
-        function setFocus(teamName) {
-            focusedTeam = teamName;
-            document.getElementById('clearFocus').classList.toggle('hidden', !teamName);
-            document.getElementById('subHeader').innerHTML = teamName 
-                ? `<span class="text-blue-400">FOCUSING ON: ${teamName}</span>` 
-                : "Florida Node | Real-Time Arbitrage";
-            fetchMarketData();
-        }
-
-        function getProb(american) {
-            if (!american || american === "N/A") return 0;
-            const n = parseFloat(american);
-            return n > 0 ? (100 / (n + 100)) : (Math.abs(n) / (Math.abs(n) + 100));
-        }
-
-        function toMoneyline(prob) {
-            if (prob <= 0 || prob >= 1) return "N/A";
-            if (prob > 0.5) {
-                return "-" + Math.round((prob / (1 - prob)) * 100);
-            } else {
-                return "+" + Math.round(((1 - prob) / prob) * 100);
-            }
-        }
-
-        async function fetchMarketData() {
-            if (isFetching) return;
-            isFetching = true;
-            
-            const url = `https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?apiKey=${API_KEY}&regions=us,us2&markets=h2h&oddsFormat=american&include_scores=true`;
-            const tableBody = document.getElementById('oddsBody');
-            
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                let masterList = [];
-                let triggerAlert = false;
-
-                data.forEach(game => {
-                    const hr = game.bookmakers.find(b => b.key === 'hardrockbet_fl') || 
-                               game.bookmakers.find(b => b.key === 'hardrockbet');
-                    const apiSource = game.bookmakers.find(b => b.key === 'draftkings' || b.key === 'fanduel');
-
-                    if (hr && apiSource) {
-                        [game.home_team, game.away_team].forEach(team => {
-                            const isHome = team === game.home_team;
-                            const hrLine = hr.markets[0].outcomes.find(o => o.name === team)?.price;
-                            const apiLine = apiSource.markets[0].outcomes.find(o => o.name === team)?.price;
-                            
-                            if (hrLine && apiLine) {
-                                const hrProb = getProb(hrLine);
-                                const apiProb = getProb(apiLine);
-                                const diff = (apiProb - hrProb) * 100;
-
-                                // Filter check
-                                if (focusedTeam && team !== focusedTeam) return;
-
-                                if (diff >= 5.0) triggerAlert = true;
-
-                                let scoreDisplay = "0-0";
-                                if (game.scores) {
-                                    const hS = game.scores.find(s => s.name === game.home_team)?.score || 0;
-                                    const aS = game.scores.find(s => s.name === game.away_team)?.score || 0;
-                                    scoreDisplay = isHome ? `${hS}-${aS}` : `${aS}-${hS}`;
-                                }
-
-                                masterList.push({
-                                    team,
-                                    hrPct: (hrProb * 100).toFixed(1),
-                                    apiPct: (apiProb * 100).toFixed(1),
-                                    diff: diff.toFixed(2),
-                                    hrProposed: hrLine > 0 ? "+" + hrLine : hrLine,
-                                    estClose: toMoneyline(apiProb),
-                                    against: isHome ? game.away_team : game.home_team,
-                                    score: scoreDisplay
-                                });
-                            }
-                        });
-                    }
-                });
-
-                if (triggerAlert && !isMuted) {
-                    alertSound.play().catch(e => console.log("Unlock sound first"));
-                }
-
-                masterList.sort((a, b) => b.diff - a.diff);
-
-                tableBody.innerHTML = masterList.length ? masterList.map(item => `
-                    <tr class="${parseFloat(item.diff) >= 5 ? 'bg-green-500/5' : ''} ${focusedTeam ? 'focus-banner' : ''}">
-                        <td class="p-4 font-bold text-slate-100 team-select" onclick="setFocus('${item.team}')">${item.team}</td>
-                        <td class="p-4 text-center text-slate-500">${item.hrPct}%</td>
-                        <td class="p-4 text-center text-slate-300">${item.apiPct}%</td>
-                        <td class="p-4 text-center font-bold ${item.diff > 0 ? 'glow-green' : 'glow-red'}">
-                            ${item.diff > 0 ? '+' : ''}${item.diff}%
-                        </td>
-                        <td class="p-4 text-center text-blue-400 font-mono">${item.hrProposed}</td>
-                        <td class="p-4 text-center text-slate-400 font-mono">${item.estClose}</td>
-                        <td class="p-4 text-slate-500 text-xs">${item.against}</td>
-                        <td class="p-4 font-mono text-blue-500 text-xs">${item.score}</td>
-                    </tr>
-                `).join('') : '<tr><td colspan="8" class="p-10 text-center text-slate-600">No active lines found.</td></tr>';
-
-                timeLeft = 60;
-            } catch (err) {
-                console.error("Fetch Error:", err);
-            } finally {
-                isFetching = false;
-            }
-        }
-
-        setInterval(() => {
-            timeLeft--;
-            document.getElementById('countdown').innerText = timeLeft + 's';
-            if (timeLeft <= 0) fetchMarketData();
-        }, 1000);
-
-        fetchMarketData();
-    </script>
-</body>
-</html>
+    // ... in the table generation part ...
+    // Change the "HR Proposed Open" cell to be clickable:
+    `<td class="p-4 text-center">
+        <a href="${item.link}" target="_blank" class="text-blue-400 font-mono hover:underline hover:text-blue-300">
+            ${item.hrProposed}
+        </a>
+    </td>`
+}
