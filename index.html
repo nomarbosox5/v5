@@ -1,185 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Gap King | Hard Rock FL</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f0f2f7;--surface:#fff;--border:#dde1ec;--text:#0f1120;--sub:#5a6180;--muted:#9096b0;
-  --green:#00a85a;--gl:#e6f7ef;--gb:#7dd4aa;--red:#e8203a;--rl:#fef0f2;--rb:#f5aab5;
-  --blue:#2563eb;--sans:'Inter',sans-serif;--mono:'JetBrains Mono',monospace
-}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
-.screen{display:none;height:100vh;flex-direction:column}
-.screen.active{display:flex}
-
-/* Header */
-.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:15px 20px;flex-shrink:0}
-.hdr-title{font-size:22px;font-weight:800;letter-spacing:-.03em}
-
-/* Dynamic City Grid */
-.scroll-area{flex:1;overflow-y:auto;padding:15px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:12px}
-.card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .1s}
-.card:active{transform:scale(0.98)}
-.card.live{border-color:var(--gb);background:var(--gl)}
-.card-team{font-size:16px;font-weight:700}
-.card-status{font-size:11px;font-weight:600;text-transform:uppercase;margin-top:4px;color:var(--sub)}
-.live-dot{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:5px;animation:blink 1s infinite}
-@keyframes blink{50%{opacity:0.3}}
-
-/* Watch Screen (Matches Screenshot 2026-04-29 at 9.25.19 PM.png) */
-.sig-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px}
-.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
-.stat-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px}
-.val{font-family:var(--mono);font-size:22px;font-weight:700}
-.lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
-.progress-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px}
-.bar-wrap{display:flex;align-items:center;gap:12px;margin:8px 0}
-.bar-label{font-size:11px;font-weight:600;width:80px}
-.bar-bg{flex:1;height:8px;background:#eef2f6;border-radius:10px;overflow:hidden}
-.bar-fill{height:100%;background:var(--blue);transition:width 0.4s}
-.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.input-group{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
-.field{width:100%;background:#f1f5f9;border:none;padding:10px;border-radius:8px;font-family:var(--mono);font-size:18px;font-weight:700;text-align:center;margin-top:8px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL | Focus Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .glow-green { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+        .glow-red { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.4); }
+        tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; }
+        .text-header { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748b; font-weight: 800; }
+        .btn-action { transition: all 0.2s; text-transform: uppercase; font-weight: 900; letter-spacing: 0.05em; }
+        .btn-action:active { transform: scale(0.95); }
+        .team-select { cursor: pointer; }
+        .team-select:hover { color: #3b82f6 ! territory; }
+        .focus-banner { background: linear-gradient(90deg, #1e3a8a 0%, #020617 100%); }
+    </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-<div class="screen active" id="pick-screen">
-  <div class="hdr"><div class="hdr-title">👑 Gap King</div><div style="font-size:12px;color:var(--sub)">Live MLB Market Inefficiency Monitor</div></div>
-  <div class="scroll-area"><div class="grid" id="game-grid">Loading today's games...</div></div>
-</div>
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h1 class="text-3xl font-black tracking-tighter text-white">MLB <span class="text-blue-500">TERMINAL</span></h1>
+                <p id="subHeader" class="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">Florida Node | Real-Time Arbitrage</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="clearFocus" onclick="setFocus(null)" class="hidden btn-action px-3 py-2 rounded-lg bg-red-900/40 text-red-400 text-[10px] border border-red-800/50">
+                    ✕ Show All
+                </button>
+                <button id="muteBtn" onclick="toggleMute()" class="btn-action px-3 py-2 rounded-lg bg-slate-800 text-[10px] border border-slate-700">
+                    🔊 Sound On
+                </button>
+                <button onclick="fetchMarketData()" class="btn-action px-4 py-2 rounded-lg bg-blue-600 text-[10px] shadow-lg shadow-blue-500/20">
+                    Force Pull
+                </button>
+                <div class="text-right ml-2">
+                    <span id="countdown" class="font-mono text-xl text-blue-500/80">60s</span>
+                </div>
+            </div>
+        </div>
 
-<div class="screen" id="watch-screen">
-  <div class="hdr" style="display:flex;justify-content:space-between;align-items:center">
-    <button onclick="location.reload()" style="background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer">‹ ALL GAMES</button>
-    <div id="active-matchup" style="font-weight:700;font-size:14px">MATCHUP</div>
-    <div style="font-size:11px;font-weight:700;color:var(--green)">● LIVE</div>
-  </div>
-  <div class="scroll-area">
-    <div class="sig-box">
-      <div class="lbl">Monitoring</div>
-      <div id="sig-status" style="font-size:24px;font-weight:800;margin:4px 0">Waiting for data...</div>
-      <div id="sig-gap" style="font-size:13px;color:var(--sub)">Targeting 8.0% Edge</div>
+        <!-- Terminal Table -->
+        <div class="glass rounded-xl overflow-hidden shadow-2xl">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-white/5">
+                        <th class="p-4 text-header">City For</th>
+                        <th class="p-4 text-header text-center">HR Win %</th>
+                        <th class="p-4 text-header text-center">API Win %</th>
+                        <th class="p-4 text-header text-center">Diff</th>
+                        <th class="p-4 text-header text-center">HR Proposed Open</th>
+                        <th class="p-4 text-header text-center">Est. Close Bet</th>
+                        <th class="p-4 text-header">Against</th>
+                        <th class="p-4 text-header">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="oddsBody" class="font-medium text-[13px]">
+                    <tr><td colspan="8" class="p-10 text-center text-slate-600 animate-pulse">Initializing Single Call Fetch...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-[10px] text-slate-600 mt-4 italic text-center">Tip: Click any team name to lock focus on that specific game.</p>
     </div>
-    <div class="stats-row">
-      <div class="stat-item"><div class="val" id="v-mlb">--</div><div class="lbl">MLB %</div></div>
-      <div class="stat-item"><div class="val" id="v-book">--</div><div class="lbl">Book %</div></div>
-      <div class="stat-item"><div class="val" id="v-gap">--</div><div class="lbl">Gap</div></div>
-    </div>
-    <div class="progress-box">
-      <div class="bar-wrap"><div class="bar-label">MLB Prob</div><div class="bar-bg"><div class="bar-fill" id="f-mlb" style="width:0%"></div></div></div>
-      <div class="bar-wrap"><div class="bar-label">Book Implied</div><div class="bar-bg"><div class="bar-fill" id="f-book" style="width:0%;background:#94a3b8"></div></div></div>
-    </div>
-    <div class="input-row">
-      <div class="input-group">
-        <div style="display:flex;justify-content:space-between"><div class="lbl">Hard Rock ML</div><div id="auto-tag" style="font-size:9px;color:var(--green);display:none">● AUTO</div></div>
-        <input class="field" id="odds-in" value="2.00" oninput="manual()">
-      </div>
-      <div class="input-group"><div class="lbl">Stake ($)</div><input class="field" value="10.00"></div>
-    </div>
-  </div>
-</div>
 
-<script>
-const API_KEY = '25bafa02832145bbfc9cce3e84332668';
-let selectedGame = null;
-let selectedTeam = null;
+    <script>
+        const API_KEY = '25bafa02832145bbfc9cce3e84332668';
+        const alertSound = new Audio('https://actions.google.com/sounds/v1/foley/notification_high_intensity.ogg');
+        let timeLeft = 60;
+        let isFetching = false;
+        let isMuted = false;
+        let focusedTeam = null;
 
-async function pfetch(url) {
-  const proxy = 'https://corsproxy.io/?url=' + encodeURIComponent(url);
-  const r = await fetch(proxy);
-  return r.json();
-}
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('muteBtn').innerText = isMuted ? '🔇 Muted' : '🔊 Sound On';
+            alertSound.play().then(() => alertSound.pause());
+        }
 
-async function loadGames() {
-  const grid = document.getElementById('game-grid');
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const data = await pfetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
-    const games = data.dates[0].games;
-    grid.innerHTML = '';
-    
-    games.forEach(g => {
-      const isLive = g.status.abstractGameState === 'Live';
-      const card = document.createElement('div');
-      card.className = `card ${isLive ? 'live' : ''}`;
-      card.innerHTML = `
-        <div class="card-team">${g.teams.away.team.name} @ ${g.teams.home.team.name}</div>
-        <div class="card-status">${isLive ? '<span class="live-dot"></span>Live' : g.status.detailedState}</div>
-      `;
-      card.onclick = () => startWatch(g, g.teams.home.team.name); // Default to Home team
-      grid.appendChild(card);
-    });
-  } catch (e) { grid.innerHTML = 'Error loading games. Check connection.'; }
-}
+        function setFocus(teamName) {
+            focusedTeam = teamName;
+            document.getElementById('clearFocus').classList.toggle('hidden', !teamName);
+            document.getElementById('subHeader').innerHTML = teamName 
+                ? `<span class="text-blue-400">FOCUSING ON: ${teamName}</span>` 
+                : "Florida Node | Real-Time Arbitrage";
+            fetchMarketData();
+        }
 
-function startWatch(game, team) {
-  selectedGame = game; selectedTeam = team;
-  document.getElementById('pick-screen').classList.remove('active');
-  document.getElementById('watch-screen').classList.add('active');
-  document.getElementById('active-matchup').textContent = `${game.teams.away.team.name} @ ${game.teams.home.team.name}`;
-  poll();
-  setInterval(poll, 20000);
-}
+        function getProb(american) {
+            if (!american || american === "N/A") return 0;
+            const n = parseFloat(american);
+            return n > 0 ? (100 / (n + 100)) : (Math.abs(n) / (Math.abs(n) + 100));
+        }
 
-async function poll() {
-  try {
-    // FIX: Gumbo In-Between Innings Logic[cite: 1]
-    const mlb = await pfetch(`https://statsapi.mlb.com/api/v1.1/game/${selectedGame.gamePk}/feed/live`);
-    let wp = mlb.liveData?.plays?.currentPlay?.about?.homeWinProbability;
-    
-    // Fallback to last play if current is null/50 during breaks[cite: 1]
-    if (wp === undefined || wp === null || (wp === 50 && mlb.liveData?.plays?.allPlays?.length > 1)) {
-        wp = mlb.liveData?.plays?.allPlays?.slice(-1)[0]?.about?.homeWinProbability || 50;
-    }
-    const teamWP = (selectedTeam === selectedGame.teams.home.team.name) ? wp : (100 - wp);
+        function toMoneyline(prob) {
+            if (prob <= 0 || prob >= 1) return "N/A";
+            if (prob > 0.5) {
+                return "-" + Math.round((prob / (1 - prob)) * 100);
+            } else {
+                return "+" + Math.round(((1 - prob) / prob) * 100);
+            }
+        }
 
-    // Hard Rock Odds Fetch[cite: 1]
-    const oddsData = await pfetch(`https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?apiKey=${API_KEY}&regions=us&bookmakers=hardrockbet&oddsFormat=decimal`);
-    const match = oddsData.find(o => o.home_team === selectedGame.teams.home.team.name);
-    const price = match?.bookmakers[0]?.markets[0]?.outcomes.find(n => n.name === selectedTeam)?.price;
+        async function fetchMarketData() {
+            if (isFetching) return;
+            isFetching = true;
+            
+            const url = `https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/?apiKey=${API_KEY}&regions=us,us2&markets=h2h&oddsFormat=american&include_scores=true`;
+            const tableBody = document.getElementById('oddsBody');
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                let masterList = [];
+                let triggerAlert = false;
 
-    if (price && document.activeElement.id !== 'odds-in') {
-      document.getElementById('odds-in').value = price;
-      document.getElementById('auto-tag').style.display = 'block';
-    }
+                data.forEach(game => {
+                    const hr = game.bookmakers.find(b => b.key === 'hardrockbet_fl') || 
+                               game.bookmakers.find(b => b.key === 'hardrockbet');
+                    const apiSource = game.bookmakers.find(b => b.key === 'draftkings' || b.key === 'fanduel');
 
-    renderUI(teamWP, parseFloat(document.getElementById('odds-in').value));
-  } catch (e) { console.log("Poll failed", e); }
-}
+                    if (hr && apiSource) {
+                        [game.home_team, game.away_team].forEach(team => {
+                            const isHome = team === game.home_team;
+                            const hrLine = hr.markets[0].outcomes.find(o => o.name === team)?.price;
+                            const apiLine = apiSource.markets[0].outcomes.find(o => o.name === team)?.price;
+                            
+                            if (hrLine && apiLine) {
+                                const hrProb = getProb(hrLine);
+                                const apiProb = getProb(apiLine);
+                                const diff = (apiProb - hrProb) * 100;
 
-function renderUI(mlbProb, odds) {
-  const bookProb = (1 / odds) * 100;
-  const gap = mlbProb - bookProb;
+                                // Filter check
+                                if (focusedTeam && team !== focusedTeam) return;
 
-  document.getElementById('v-mlb').textContent = mlbProb.toFixed(1) + '%';
-  document.getElementById('v-book').textContent = bookProb.toFixed(1) + '%';
-  document.getElementById('v-gap').textContent = gap.toFixed(1) + '%';
-  document.getElementById('f-mlb').style.width = mlbProb + '%';
-  document.getElementById('f-book').style.width = bookProb + '%';
-  document.getElementById('sig-gap').textContent = `Gap: ${gap.toFixed(1)}% (Target: 8.0%)`;
+                                if (diff >= 5.0) triggerAlert = true;
 
-  const status = document.getElementById('sig-status');
-  if (gap >= 8) {
-    status.textContent = "🚨 BET SIGNAL";
-    status.style.color = "var(--red)";
-  } else {
-    status.textContent = "Monitoring...";
-    status.style.color = "var(--text)";
-  }
-}
+                                let scoreDisplay = "0-0";
+                                if (game.scores) {
+                                    const hS = game.scores.find(s => s.name === game.home_team)?.score || 0;
+                                    const aS = game.scores.find(s => s.name === game.away_team)?.score || 0;
+                                    scoreDisplay = isHome ? `${hS}-${aS}` : `${aS}-${hS}`;
+                                }
 
-function manual() {
-  document.getElementById('auto-tag').style.display = 'none';
-  renderUI(parseFloat(document.getElementById('v-mlb').textContent), parseFloat(document.getElementById('odds-in').value));
-}
+                                masterList.push({
+                                    team,
+                                    hrPct: (hrProb * 100).toFixed(1),
+                                    apiPct: (apiProb * 100).toFixed(1),
+                                    diff: diff.toFixed(2),
+                                    hrProposed: hrLine > 0 ? "+" + hrLine : hrLine,
+                                    estClose: toMoneyline(apiProb),
+                                    against: isHome ? game.away_team : game.home_team,
+                                    score: scoreDisplay
+                                });
+                            }
+                        });
+                    }
+                });
 
-loadGames();
-</script>
+                if (triggerAlert && !isMuted) {
+                    alertSound.play().catch(e => console.log("Unlock sound first"));
+                }
+
+                masterList.sort((a, b) => b.diff - a.diff);
+
+                tableBody.innerHTML = masterList.length ? masterList.map(item => `
+                    <tr class="${parseFloat(item.diff) >= 5 ? 'bg-green-500/5' : ''} ${focusedTeam ? 'focus-banner' : ''}">
+                        <td class="p-4 font-bold text-slate-100 team-select" onclick="setFocus('${item.team}')">${item.team}</td>
+                        <td class="p-4 text-center text-slate-500">${item.hrPct}%</td>
+                        <td class="p-4 text-center text-slate-300">${item.apiPct}%</td>
+                        <td class="p-4 text-center font-bold ${item.diff > 0 ? 'glow-green' : 'glow-red'}">
+                            ${item.diff > 0 ? '+' : ''}${item.diff}%
+                        </td>
+                        <td class="p-4 text-center text-blue-400 font-mono">${item.hrProposed}</td>
+                        <td class="p-4 text-center text-slate-400 font-mono">${item.estClose}</td>
+                        <td class="p-4 text-slate-500 text-xs">${item.against}</td>
+                        <td class="p-4 font-mono text-blue-500 text-xs">${item.score}</td>
+                    </tr>
+                `).join('') : '<tr><td colspan="8" class="p-10 text-center text-slate-600">No active lines found.</td></tr>';
+
+                timeLeft = 60;
+            } catch (err) {
+                console.error("Fetch Error:", err);
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        setInterval(() => {
+            timeLeft--;
+            document.getElementById('countdown').innerText = timeLeft + 's';
+            if (timeLeft <= 0) fetchMarketData();
+        }, 1000);
+
+        fetchMarketData();
+    </script>
 </body>
 </html>
